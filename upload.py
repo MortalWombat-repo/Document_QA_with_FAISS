@@ -31,6 +31,9 @@ async def upload_documents(
     user_folder = UPLOAD_BASE / user_id / session_id
     user_folder.mkdir(parents=True, exist_ok=True)
 
+    valid_paths = []
+
+    # Save uploaded files into user_folder
     if files:
         for file in files:
             if not file.filename.lower().endswith(".pdf"):
@@ -38,19 +41,24 @@ async def upload_documents(
             file_path = user_folder / file.filename
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
+            valid_paths.append(file_path)
 
+    # Use manual_paths directly, no copying
     if manual_paths:
         paths = [Path(p.strip()) for p in manual_paths.split(",")]
         for path in paths:
             if not path.exists() or not path.suffix.lower() == ".pdf":
                 raise HTTPException(status_code=400, detail=f"Invalid file path: {path}")
-            shutil.copy(path, user_folder / path.name)
+        valid_paths.extend(paths)
 
-    if not any(user_folder.glob("*.pdf")):
+    if not valid_paths:
         raise HTTPException(status_code=400, detail="No valid PDF files provided.")
 
     try:
-        extracted_text = extract_texts_from_folder(user_folder)
+        # Extract text from all valid pdf paths
+        extracted_text = ""
+        for pdf_path in valid_paths:
+            extracted_text += extract_texts_from_folder(pdf_path.parent)
 
         if not extracted_text.strip():
             raise HTTPException(status_code=400, detail="No text found in uploaded PDFs.")
@@ -60,9 +68,8 @@ async def upload_documents(
         client = import_google_api()
         gemini_embed_fn = embedding_function(client)
 
-        # ❗ NEW: Save index + hash inside session folder
-        faiss_index_path = user_folder / "index.faiss"
-        hash_path = user_folder / "file_hashes.json"
+        faiss_index_path = user_folder / "vector_store/index.faiss"
+        hash_path = user_folder / "vector_store/file_hashes.json"
 
         build_or_update_faiss_index(
             chunks,
@@ -76,12 +83,12 @@ async def upload_documents(
         raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
 
     return JSONResponse({
-        "message": f"{len(list(user_folder.glob('*.pdf')))} file(s) uploaded and processed.",
+        "message": f"{len(valid_paths)} file(s) uploaded and/or processed.",
         "user_id": user_id,
         "session_id": session_id,
-        "file_paths": [str(p) for p in user_folder.glob('*.pdf')],
+        "file_paths": [str(p) for p in valid_paths],
         "session_mode": session
     })
 
 if __name__ == "__main__":
-    uvicorn.run("upload:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("upload:app", host="0.0.0.0", port=8001, reload=True)

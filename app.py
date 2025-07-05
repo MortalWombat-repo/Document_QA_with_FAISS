@@ -4,6 +4,7 @@ import os
 import json
 import faiss
 from pathlib import Path
+#import fasttext
 
 from core import (
     extract_texts_from_folder,
@@ -98,10 +99,12 @@ if faiss_index is None:
 # Streamlit UI
 # -----------------------------------
 
-def detect_language_fasttext(text):
-    prediction = ft_lang_model.predict(text.replace('\n', ' ').strip())
-    lang_code = prediction[0][0].replace('__label__', '')
-    return lang_code
+
+#def detect_language_fasttext(text):
+    #prediction = ft_lang_model.predict(text.replace('\n', ' ').strip())
+    #lang_code = prediction[0][0].replace('__label__', '')
+    #return lang_code
+
 
 def main():
     #Title page

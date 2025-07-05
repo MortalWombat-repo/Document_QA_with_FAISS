@@ -1,7 +1,7 @@
 import requests
 from pathlib import Path
 
-url = "http://localhost:8000/upload"
+url = "http://localhost:8001/upload"
 
 # Option 1: Upload via HTTP Form File
 file_path = Path("files/contract.pdf")
