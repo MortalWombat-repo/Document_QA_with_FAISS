@@ -1,6 +1,6 @@
 import requests
 
-url = "http://localhost:8000/ask"
+url = "http://localhost:8002/ask"
 data = {
     "user_query": "Koje informacije trebaju sadržavati fakture?",
     "user_language": "hr",

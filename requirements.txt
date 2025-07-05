@@ -16,3 +16,4 @@ lingua-language-detector
 nltk
 pydantic
 requests
+python-multipart

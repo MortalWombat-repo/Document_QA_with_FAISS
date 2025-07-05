@@ -78,8 +78,8 @@ def embedding_function(client):
 def hash_chunk(text):
     return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
-def build_or_update_faiss_index(chunks, gemini_embedding_function, batch_size=10, index_path="index.faiss", hash_path="file_hashes.json"):
-    hash_path = "file_hashes.json"
+def build_or_update_faiss_index(chunks, gemini_embedding_function, batch_size=10, index_path="vector_store/index.faiss", hash_path="vector_store/file_hashes.json"):
+    hash_path = "vector_store/file_hashes.json"
     faiss_files = glob.glob("*.faiss")
     
     if faiss_files:
@@ -87,7 +87,7 @@ def build_or_update_faiss_index(chunks, gemini_embedding_function, batch_size=10
         index = faiss.read_index(index_path)
         print(f"Loaded existing FAISS index '{index_path}' with {index.ntotal} vectors.")
     else:
-        index_path = "index.faiss"
+        index_path = "vector_store/index.faiss"
         index = None
         print("No existing .faiss file found. Creating new FAISS index.")
 
@@ -266,17 +266,17 @@ def query_document_hr(user_query, embed_fn, chunks, faiss_index, client, user_la
 
     return answer.text
 
-def save_chunks(chunks, filename="chunks.json"):
+def save_chunks(chunks, filename="vector_store/chunks.json"):
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(chunks, f, ensure_ascii=False, indent=2)
 
-def load_chunks(filename="chunks.json"):
+def load_chunks(filename="vector_store/chunks.json"):
     if os.path.exists(filename):
         with open(filename, "r", encoding="utf-8") as f:
             return json.load(f)
     return None
 
-def load_faiss_index(index_path="index.faiss"):
+def load_faiss_index(index_path="vector_store/index.faiss"):
     if os.path.exists(index_path):
         return faiss.read_index(index_path)
     return None
