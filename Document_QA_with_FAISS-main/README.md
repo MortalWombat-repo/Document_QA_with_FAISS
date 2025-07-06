@@ -1,1 +1,0 @@
-# Document_QA_with_FAISS
