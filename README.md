@@ -49,6 +49,23 @@ You will have different options based on the mode you opt for.
   Docker and REST API usage bellow.
 
 ### Docker container creation
-To build a Docker container
+1. To build a Docker container run:
+   ```
+   docker build -t my-app .
+   ```
+2. To run a container with all of the exposed ports run:
+   ```
+   docker run -it -p 8000:8000 -p 8001:8001 -p 8002:8002 my-app
+   ```
+   Do NOT ommit the -p flag, and do not change the ports unless you also change them in the .py files that uvicorn serves.
+
+### REST API
+The REST API is implemented with FastAPI and a production ready server uvicorn.
+
+   
+
+### Streamlit app
+You now have a fully functional 
+
 
   
