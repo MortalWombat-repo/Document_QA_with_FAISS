@@ -62,10 +62,49 @@ You will have different options based on the mode you opt for.
 ### REST API
 The REST API is implemented with FastAPI and a production ready server uvicorn.
 
+For session and user-based modes, you should utilize the functionality from the `upload.py` file that borrows from `core.py`, by sending a POST request with the file to be vectorized to a listening server, either by a direct CURL request from the terminal, or by a script that mimics curl-like behavior in testing folder.
+After the vectorization you can either query via POST request or from a Streamlit frontend.
+
+1. cd into testing
+   ```
+   cd testing
+   ```
+2. run either test_upload_manual.py or test_upload_session.py
+   ```
+   python test_upload_manual.py
+   ```
+   ```
+   python test_upload_session.py
+   ```
    
+   Alternatively run it through curl
+   for user/manual
+   ```
+   curl -X POST http://localhost:8001/upload \
+  -F "files=@YOUR_FILES_ABSOLUTE_PATH" \
+  -F "user_id=123" \
+  -F "session=false"
+   ```
+   or for session based
+   ```
+   curl -X POST http://localhost:8001/upload \
+  -F "files=YOUR_FILES_ABSOLUTE_PATH \
+  -F "session=true"
+   ```
+3. run a query from ask.py
+   ```
+   python ask.py
+   ```
 
 ### Streamlit app
-You now have a fully functional 
+You have a fully functional Streamlit frontend when ran in Docker or outside of it as explained earlier.
+To access Streamlit on your localhost, either look for a link in the terminal output when first running your Docker container or enter into your browser:
+   ```
+   http://localhost:8000
+   ```
+Unfortunately, even though it is an active issue that is being worked on, there is still no https support in streamlit.
+One might try running nginx as a reverse proxy to remedy that but it is a tiring endeavour, which I do not recommend.
+
 
 
   
