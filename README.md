@@ -50,13 +50,13 @@ You will have different options based on the mode you opt for.
 
 ### Docker container creation
 1. To build a Docker container run:
-   ```
-   docker build -t my-app .
-   ```
+```
+docker build -t my-app .
+```
 2. To run a container with all of the exposed ports run:
-   ```
-   docker run -it -p 8000:8000 -p 8001:8001 -p 8002:8002 my-app
-   ```
+```
+docker run -it -p 8000:8000 -p 8001:8001 -p 8002:8002 my-app
+```
    Do NOT ommit the -p flag, and do not change the ports unless you also change them in the .py files that uvicorn serves.
 
 ### REST API
@@ -66,42 +66,44 @@ For session and user-based modes, you should utilize the functionality from the 
 After the vectorization you can either query via POST request or from a Streamlit frontend.
 
 1. cd into testing
-   ```
-   cd testing
-   ```
+```
+cd testing
+```
+   
 2. run either test_upload_manual.py or test_upload_session.py
-   ```
-   python test_upload_manual.py
-   ```
-   ```
-   python test_upload_session.py
-   ```
+```
+python test_upload_manual.py
+```
+   
+```
+python test_upload_session.py
+```
    
    Alternatively run it through curl
    for user/manual
-   ```
-   curl -X POST http://localhost:8001/upload \
-  -F "files=@YOUR_FILES_ABSOLUTE_PATH" \
-  -F "user_id=123" \
-  -F "session=false"
-   ```
+```bash
+curl -X POST http://localhost:8001/upload \
+-F "files=@YOUR_FILES_ABSOLUTE_PATH" \
+-F "user_id=123" \
+-F "session=false"
+```
    or for session based
-   ```
-   curl -X POST http://localhost:8001/upload \
-  -F "files=YOUR_FILES_ABSOLUTE_PATH \
-  -F "session=true"
-   ```
+```
+curl -X POST http://localhost:8001/upload \
+-F "files=YOUR_FILES_ABSOLUTE_PATH \
+-F "session=true"
+```
 3. run a query from ask.py
-   ```
-   python ask.py
-   ```
+```
+python ask.py
+```
 
 ### Streamlit app
 You have a fully functional Streamlit frontend when ran in Docker or outside of it as explained earlier.
 To access Streamlit on your localhost, either look for a link in the terminal output when first running your Docker container or enter into your browser:
-   ```
-   http://localhost:8000
-   ```
+```
+http://localhost:8000
+```
 Unfortunately, even though it is an active issue that is being worked on, there is still no https support in streamlit.
 One might try running nginx as a reverse proxy to remedy that but it is a tiring endeavour, which I do not recommend.
 
