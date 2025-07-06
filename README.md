@@ -1,10 +1,10 @@
 # Document_QA_with_FAISS
 
 ## Overview
-This is a Retreival Augmented Generation(RAG) system for querying information from documents. The focus is on contractual information but it can be of any type generally. <br>
-It uses FAISS(Facebook AI Similarity Search) as its vector store and uses Google Gemini API for inference. <br>
+This is a **Retreival Augmented Generation (RAG)** system for querying information from documents. The focus is on contractual information but it can be of any type generally. <br>
+It uses **FAISS (Facebook AI Similarity Search)** as its vector store and uses **Google Gemini API** for inference. <br>
 The indexed data is chunked for better throughoutput and hashed so no duplicates are accepted. <br>
-It is served in a Streamlit frontend and has 3 modes of use:
+It is served in a **Streamlit** frontend and has 3 modes of use:
 * **Local:**  
   This mode allows you to query documents directly on your local machine without any user authentication or session tracking. Ideal for single-user use or quick testing of      the vector store.
   
