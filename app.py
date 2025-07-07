@@ -138,3 +138,68 @@ def main():
             hash_path = vector_store_path / "file_hashes.json"
 
             vector_store_path.mkdir(parents=True, exist_ok=True)
+            save_chunks(chunks, str(chunks_path))
+            faiss_index = build_or_update_faiss_index(
+                chunks, gemini_embed_fn,
+                index_path=str(faiss_path),
+                hash_path=str(hash_path)
+            )
+        else:
+            chunks = []
+            faiss_index = None
+            st.error(f"No data found for {mode_type}{' ID: ' + (user_id or session_id) if mode_type in ['User', 'Session'] else ''}")
+            st.info("Please upload documents first using the upload API.")
+            return
+
+    explain_tab = st.tabs(["Query Documents"])[0]
+    with explain_tab:
+        with st.form(key="query_form"):
+            user_query = st.text_input(
+                "💬 Query the database:",
+                placeholder="e.g., The invoices must include what information?"
+            )
+            submit_button = st.form_submit_button("🔎 Search the database")
+
+        if submit_button and user_query:
+            if not chunks or not faiss_index:
+                st.error("No data available for querying. Please check your configuration.")
+                return
+
+            with st.spinner("Searching for the answer..."):
+                user_language = detect_language_lingua(user_query)
+
+                try:
+                    if user_language == "ENGLISH":
+                        article = query_document(
+                            user_query, gemini_embed_fn, chunks, faiss_index,
+                            client, user_language, top_k=1
+                        )
+                    elif user_language == "CROATIAN":
+                        article = query_document_hr(
+                            user_query, gemini_embed_fn, chunks, faiss_index,
+                            client, user_language, top_k=1
+                        )
+                    else:
+                        article = query_document(
+                            user_query, gemini_embed_fn, chunks, faiss_index,
+                            client, user_language, top_k=1
+                        )
+
+                    st.success(f"Detected language: {user_language}")
+                    st.subheader("📖 Answer")
+                    st.markdown(article)
+
+                except Exception as e:
+                    st.error(f"Error processing query: {str(e)}")
+
+        if chunks and faiss_index:
+            st.markdown("---")
+            st.markdown("### Current Data Status")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Total Chunks", len(chunks))
+            with col2:
+                st.metric("FAISS Index Vectors", faiss_index.ntotal)
+
+if __name__ == "__main__":
+    main()
