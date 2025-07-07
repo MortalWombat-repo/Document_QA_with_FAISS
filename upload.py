@@ -1,31 +1,12 @@
+import os
+from pathlib import Path
+import logging
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import JSONResponse
 from typing import Optional, List
 from uuid import uuid4
 import shutil
-from pathlib import Path
 import uvicorn
-import os
-<<<<<<< HEAD
-
-from core import (
-    extract_texts_from_folder,
-    chunking,
-    import_google_api,
-    embedding_function,
-    build_or_update_faiss_index
-)
-
-app = FastAPI()
-
-UPLOAD_BASE = Path("files")
-UPLOAD_BASE.mkdir(exist_ok=True)
-
-@app.post("/upload")
-async def upload_documents(
-    user_id: str = Form(...),
-=======
-import logging
 
 from core import (
     extract_text_from_pdf,
@@ -45,15 +26,10 @@ app = FastAPI()
 @app.post("/upload")
 async def upload_documents(
     user_id: Optional[str] = Form(None),
->>>>>>> f32d650 (Proper project root: move contents to repo root)
     session: Optional[bool] = Form(False),
     manual_paths: Optional[str] = Form(None),
     files: Optional[List[UploadFile]] = File(None)
 ):
-<<<<<<< HEAD
-    session_id = str(uuid4()) if session else "global"
-    user_folder = UPLOAD_BASE / user_id / session_id
-=======
     if session:
         session_id = str(uuid4())
         user_folder = Path("/app/sessions") / session_id
@@ -67,7 +43,6 @@ async def upload_documents(
     # Clear existing folder to ensure fresh start
     if user_folder.exists():
         shutil.rmtree(user_folder)
->>>>>>> f32d650 (Proper project root: move contents to repo root)
     user_folder.mkdir(parents=True, exist_ok=True)
 
     valid_paths = []
@@ -78,10 +53,7 @@ async def upload_documents(
             if not file.filename.lower().endswith(".pdf"):
                 raise HTTPException(status_code=400, detail=f"Unsupported file type: {file.filename}")
             file_path = user_folder / file.filename
-<<<<<<< HEAD
-=======
             logger.info(f"Saving file: {file_path}")
->>>>>>> f32d650 (Proper project root: move contents to repo root)
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
             valid_paths.append(file_path)
@@ -98,17 +70,6 @@ async def upload_documents(
         raise HTTPException(status_code=400, detail="No valid PDF files provided.")
 
     try:
-<<<<<<< HEAD
-        # Extract text from all valid pdf paths
-        extracted_text = ""
-        for pdf_path in valid_paths:
-            extracted_text += extract_texts_from_folder(pdf_path.parent)
-
-        if not extracted_text.strip():
-            raise HTTPException(status_code=400, detail="No text found in uploaded PDFs.")
-
-        chunks = chunking(extracted_text)
-=======
         # Extract text from individual PDFs
         extracted_text = ""
         for pdf_path in valid_paths:
@@ -122,16 +83,10 @@ async def upload_documents(
         logger.info(f"Chunking text, length: {len(extracted_text)}")
         chunks = chunking(extracted_text)
         logger.info(f"Created {len(chunks)} chunks: {str(chunks)[:100]}...")
->>>>>>> f32d650 (Proper project root: move contents to repo root)
 
         client = import_google_api()
         gemini_embed_fn = embedding_function(client)
 
-<<<<<<< HEAD
-        faiss_index_path = user_folder / "vector_store/index.faiss"
-        hash_path = user_folder / "vector_store/file_hashes.json"
-
-=======
         vector_store_path = user_folder / "vector_store"
         chunks_path = vector_store_path / "chunks.json"
         faiss_index_path = vector_store_path / "index.faiss"
@@ -151,7 +106,6 @@ async def upload_documents(
             raise HTTPException(status_code=500, detail=f"Failed to save chunks: {str(e)}")
 
         logger.info(f"Building FAISS index at: {faiss_index_path}")
->>>>>>> f32d650 (Proper project root: move contents to repo root)
         build_or_update_faiss_index(
             chunks,
             gemini_embed_fn,
@@ -161,10 +115,7 @@ async def upload_documents(
         )
 
     except Exception as e:
-<<<<<<< HEAD
-=======
         logger.error(f"Processing error: {str(e)}")
->>>>>>> f32d650 (Proper project root: move contents to repo root)
         raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
 
     return JSONResponse({
@@ -176,8 +127,4 @@ async def upload_documents(
     })
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     uvicorn.run("upload:app", host="0.0.0.0", port=8001, reload=True)
-=======
-    uvicorn.run("upload:app", host="0.0.0.0", port=8001, reload=True)
->>>>>>> f32d650 (Proper project root: move contents to repo root)
