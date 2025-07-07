@@ -146,5 +146,8 @@ One might try running nginx as a reverse proxy to remedy that, but that is compl
 
 ## Video Demonstration
 
+### Building the container
+After cloning the repository, cd-ing into the project, and generating your own API KEY as described, build the container.
 
+[![Video Thumbnail](https://i.imgur.com/fDSCDmN.gif)](https://imgur.com/a/IoPSvKA)
   
