@@ -106,7 +106,7 @@ curl -X POST http://localhost:8002/ask \
 }'
 ```
 
-#### Different modes
+### Different modes
 Next steps may vary.  
 You will have different options based on the mode you opt for.
 
@@ -129,6 +129,8 @@ http://localhost:8000
 ```
 Unfortunately, even though it is an active issue that is being worked on, there is still no https support in streamlit.
 One might try running nginx as a reverse proxy to remedy that but it is a tiring endeavour, which I do not recommend.
+
+##Video Demonstration
 
 
   
