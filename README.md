@@ -1,10 +1,10 @@
 # Document_QA_with_FAISS
 
 ## Overview
-This is a **Retreival Augmented Generation (RAG)** system for querying information from documents. The focus is on contractual information but it can be of any type generally. <br>
+This is a **Retrieval Augmented Generation (RAG)** system for querying information from documents. The focus is on contractual information but it can be of any type generally. <br>
 It uses **FAISS (Facebook AI Similarity Search)** as its vector store and uses **Google Gemini API** for inference. <br>
 The indexed data is chunked for better throughoutput and hashed so no duplicates are accepted. <br>
-It is served in a **Streamlit** frontend and has 3 modes of use:
+The system is served in a **Streamlit** frontend, and has 3 modes of use:
 
 * **Local:**  
   This mode allows you to query documents directly on your local machine without any user authentication or session tracking. Ideal for single-user use or quick testing of      the vector store.
@@ -53,7 +53,7 @@ docker build -t my-app .
 ```
 docker run -it -p 8000:8000 -p 8001:8001 -p 8002:8002 my-app
 ```
-   Do NOT ommit the -p flag, and do not change the ports unless you also change them in the .py files that uvicorn serves.
+   Do NOT omit the -p flag, and do not change the ports unless you also change them in the .py files that uvicorn serves.
 
 ### REST API
 The REST API is implemented with FastAPI and a production ready server uvicorn.
@@ -86,14 +86,14 @@ curl -X POST http://localhost:8001/upload \
    or for session based
 ```
 curl -X POST http://localhost:8001/upload \
--F "files=YOUR_FILES_ABSOLUTE_PATH \
+-F "files=@YOUR_FILES_ABSOLUTE_PATH \
 -F "session=true"
 ```
 3. run a query from ask.py
 ```
 python test_ask.py
 ```
-  or run fron curl
+  or run from curl
 ```
 curl -X POST http://localhost:8002/ask \
 -H "Content-Type: application/json" \
@@ -121,16 +121,16 @@ You will have different options based on the mode you opt for.
   This mode also follows the same logic as user-based option.
   You need to record your session id for authentication in Streamlit.
 
-### Streamlit app
+### Streamlit App
 You have a fully functional Streamlit frontend when ran in Docker or outside of it as explained earlier.
 To access Streamlit on your localhost, either look for a link in the terminal output when first running your Docker container or enter into your browser:
 ```
 http://localhost:8000
 ```
 Unfortunately, even though it is an active issue that is being worked on, there is still no https support in streamlit.
-One might try running nginx as a reverse proxy to remedy that but it is a tiring endeavour, which I do not recommend.
+One might try running nginx as a reverse proxy to remedy that, but that is complex and not recommended for this setup.
 
-##Video Demonstration
+## Video Demonstration
 
 
   
