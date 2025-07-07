@@ -149,7 +149,7 @@ One might try running nginx as a reverse proxy to remedy that, but that is compl
 ### Building the container
 After cloning the repository, cd-ing into the project, and generating your own API KEY as described, build the container.
 
-[![docker](https://i.imgur.com/fDSCDmN.gif)](https://imgur.com/a/IoPSvKA)
+[![docker](https://i.imgur.com/fDSCDmN.gif)](https://i.imgur.com/fDSCDmN.gif)
 
 ### Populating the vector database
 You can either run `create_vector_store.py` or populate it yourself using POST requests, either from prepared scripts in the `testing` folder or manually through curl as mentioned.
@@ -158,24 +158,24 @@ We will demonstrate both methods.
 #### Creating the vector database from the files folder locally
 run `python create_vector_store.py`
 
-[![create_vector_store](https://i.imgur.com/0QJxheF.gif)](https://imgur.com/a/4S6VVvO)
+[![create_vector_store](https://i.imgur.com/0QJxheF.gif)](https://i.imgur.com/0QJxheF.gif)
 
 #### Creating the vector database using a POST request in a Docker container
 using a POST request and demonstrating the created files in Docker.
 We will need to keep a running container for this process.
 
-[![create_vector_store_post_request](https://i.imgur.com/HkqHnyY.gif)](https://imgur.com/a/N2UtGvx)
+[![create_vector_store_post_request](https://i.imgur.com/HkqHnyY.gif)](https://i.imgur.com/HkqHnyY.gif)
 
 ### Querying the database through a POST request
 
-[![post_request_query](https://i.imgur.com/MpAB60x.gif)](https://imgur.com/a/d0X1pZm)
+[![post_request_query](https://i.imgur.com/MpAB60x.gif)](https://i.imgur.com/MpAB60x.gif)
 
 ### Streamlit demo
 As mentioned there are three modes you can choose from.  
 Global/Local mode takes data in from the vector_store folder that you populate with `create_vector_store.py`script.  
 For User and Session based, you will need to authorize in Streamlit by copying user_id or session_id.
 
-[![streamlit_demo](https://i.imgur.com/EEQLaKa.gif)](https://imgur.com/a/HOiOtbG)  
+[![Streamlit Demo Video](https://imgur.com/EEQLaKa)](https://imgur.com/EEQLaKa)
 
 ## Possible improvements
 
