@@ -37,7 +37,7 @@ cd Document_QA_with_FAISS
 This project uses Google Gemini API for inference.
 To use this project you should supply your own API key.
 
-You can create your own API key [AT THIS LINK](https://aistudio.google.com/app/apikey)
+You can create your own API key [AT THIS LINK](https://aistudio.google.com/app/apikey)  
 You should add it to the .env file.
 ```
 nano .env
