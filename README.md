@@ -175,7 +175,7 @@ As mentioned there are three modes you can choose from.
 Global/Local mode takes data in from the vector_store folder that you populate with `create_vector_store.py`script.  
 For User and Session based, you will need to authorize in Streamlit by copying user_id or session_id.
 
-[![streamlit](https://i.imgur.com/EEQLaKa.gif)](https://imgur.com/a/HOiOtbG)
+[![streamlit_demo](https://i.imgur.com/EEQLaKa.gif)](https://imgur.com/a/HOiOtbG)
 
 ## Possible improvements
 
