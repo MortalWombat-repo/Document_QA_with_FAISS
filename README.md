@@ -2,6 +2,7 @@
 
 # Table of Contents
 - [Overview](#overview)
+- [Stack](#stack-technologies-used-and-features-supported)
 - [Usage](#usage)
   - [Cloning the project](#cloning-the-project)
   - [Supplying your own API key](#supplying-your-own-api-key)
@@ -25,6 +26,8 @@ The system is served in a **Streamlit** frontend, and has 3 modes of use:
 
 * **Session-based:**  
   This mode enables temporary sessions where queries and data are isolated per session, useful for short-lived or anonymous interactions without persistent user accounts.
+
+## Stack (Technologies used and features supported)
 
 ## Usage
 Important!
