@@ -155,10 +155,20 @@ After cloning the repository, cd-ing into the project, and generating your own A
 You can either run `create_vector_store.py` or populate it yourself using POST requests, either from prepared scripts in the `testing` folder or manually through curl as mentioned.
 We will demonstrate both methods.
 
-#### Creating the vector database from the files folder
+#### Creating the vector database from the files folder locally
 run `python create_vector_store.py`
 
 [![create_vector_store](https://i.imgur.com/0QJxheF.gif)](https://imgur.com/a/4S6VVvO)
+
+#### Creating the vector database using a POST request in a Docker container
+using a POST request and demonstrating the created files in Docker.
+We will need to keep a running container for this process.
+
+[![create_vector_store_post_request](https://i.imgur.com/HkqHnyY.gif)](https://imgur.com/a/N2UtGvx)
+
+
+
+
 
 
 
