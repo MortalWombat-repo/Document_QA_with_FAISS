@@ -166,7 +166,22 @@ We will need to keep a running container for this process.
 
 [![create_vector_store_post_request](https://i.imgur.com/HkqHnyY.gif)](https://imgur.com/a/N2UtGvx)
 
+### Querying the database through a POST request
 
+[![post_request_query](https://i.imgur.com/MpAB60x.gif)](https://imgur.com/a/d0X1pZm)
+
+### Streamlit demo
+As mentioned there are three modes you can choose from.  
+Global/Local mode takes data in from the vector_store folder that you populate with `create_vector_store.py`script.  
+For User and Session based, you will need to authorize in Streamlit by copying user_id or session_id.
+
+[![streamlit](https://i.imgur.com/EEQLaKa.gif)](https://imgur.com/a/HOiOtbG)
+
+## Possible improvements
+
+* adding metadata when chunking and labeling each chunk
+* using said matadata to represent chunks as a whole document for easier keyword visualization and whole document operations such as summarizing and paraphrasing.
+* labeler of key terms and ranking of documents by importance
 
 
 
