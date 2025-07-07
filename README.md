@@ -177,6 +177,8 @@ For User and Session based, you will need to authorize in Streamlit by copying u
 
 [streamlit demo video](https://i.imgur.com/EEQLaKa.gif)
 
+The video is too large to embed.
+
 ## Possible improvements
 
 * adding metadata when chunking and labeling each chunk
