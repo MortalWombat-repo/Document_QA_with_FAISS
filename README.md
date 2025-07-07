@@ -105,7 +105,19 @@ curl -X POST http://localhost:8001/upload \
 ```
 3. run a query from ask.py
 ```
-python ask.py
+python test_ask.py
+```
+  or run fron curl
+```
+curl -X POST http://localhost:8002/ask \
+-H "Content-Type: application/json" \
+-d '{
+"user_query": "The invoices must contain which information?",
+"user_language": "en",
+"top_k": 1,
+"user_id": "123",
+"session_id": "manual"
+}'
 ```
 
 ### Streamlit app
