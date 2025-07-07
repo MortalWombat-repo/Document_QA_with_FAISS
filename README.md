@@ -1,5 +1,16 @@
 # Document_QA_with_FAISS
 
+# Table of Contents
+- [Overview](#overview)
+- [Usage](#usage)
+  - [Cloning the project](#cloning-the-project)
+  - [Supplying your own API key](#supplying-your-own-api-key)
+  - [Docker container creation](#docker-container-creation)
+  - [REST API](#rest-api)
+  - [Different modes](#different-modes)
+  - [Streamlit App](#streamlit-app)
+- [Video Demonstration](#video-demonstration)
+
 ## Overview
 This is a **Retrieval Augmented Generation (RAG)** system for querying information from documents. The focus is on contractual information but it can be of any type generally. <br>
 It uses **FAISS (Facebook AI Similarity Search)** as its vector store and uses **Google Gemini API** for inference. <br>
