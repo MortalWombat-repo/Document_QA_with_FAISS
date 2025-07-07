@@ -33,6 +33,16 @@ git clone https://github.com/MortalWombat-repo/Document_QA_with_FAISS.git
 cd Document_QA_with_FAISS
 ```
 
+### Supplying your own API key
+This project uses Google Gemini API for inference.
+To use this project you should supply your own API key.
+
+You can create your own API key [AT THIS LINK](https://aistudio.google.com/app/apikey)
+You should add it to the .env file.
+```
+nano .env
+```
+
 ### Different modes
 Next steps may vary.  
 You will have different options based on the mode you opt for.
