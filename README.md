@@ -149,5 +149,17 @@ One might try running nginx as a reverse proxy to remedy that, but that is compl
 ### Building the container
 After cloning the repository, cd-ing into the project, and generating your own API KEY as described, build the container.
 
-[![Video Thumbnail](https://i.imgur.com/fDSCDmN.gif)](https://imgur.com/a/IoPSvKA)
-  
+[![docker](https://i.imgur.com/fDSCDmN.gif)](https://imgur.com/a/IoPSvKA)
+
+### Populating the vector database
+You can either run `create_vector_store.py` or populate it yourself using POST requests, either from prepared scripts in the `testing` folder or manually through curl as mentioned.
+We will demonstrate both methods.
+
+#### Creating the vector database from the files folder
+run `python create_vector_store.py`
+
+[![create_vector_store](https://i.imgur.com/0QJxheF.gif)](https://imgur.com/a/4S6VVvO)
+
+
+
+
