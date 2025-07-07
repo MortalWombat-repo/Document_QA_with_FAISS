@@ -5,6 +5,7 @@ This is a **Retreival Augmented Generation (RAG)** system for querying informati
 It uses **FAISS (Facebook AI Similarity Search)** as its vector store and uses **Google Gemini API** for inference. <br>
 The indexed data is chunked for better throughoutput and hashed so no duplicates are accepted. <br>
 It is served in a **Streamlit** frontend and has 3 modes of use:
+
 * **Local:**  
   This mode allows you to query documents directly on your local machine without any user authentication or session tracking. Ideal for single-user use or quick testing of      the vector store.
   
@@ -42,21 +43,6 @@ You should add it to the .env file.
 ```
 nano .env
 ```
-
-### Different modes
-Next steps may vary.  
-You will have different options based on the mode you opt for.
-
-* **Local:**  
-  The use case is as follows: First add your .pdf files in the files folder, and next run `python create_vector_store.py` to populate with vecor_store files. After that       either run `streamlit run app.py` and choose local option or build a docker container and have many options.
-
-* **User-based:**  
-  For this mode there will be a need for building your own docker container with the use of a custom REST API for populating the vector store.
-  Docker and REST API usage explained below.
-
-* **Session-based:**  
-  This mode also follows the same logic as user-based option.
-  Docker and REST API usage bellow.
 
 ### Docker container creation
 1. To build a Docker container run:
@@ -120,6 +106,21 @@ curl -X POST http://localhost:8002/ask \
 }'
 ```
 
+#### Different modes
+Next steps may vary.  
+You will have different options based on the mode you opt for.
+
+* **Local:**  
+  The use case is as follows: First add your .pdf files in the files folder, and next run `python create_vector_store.py` to populate with vecor_store files. After that       either run `streamlit run app.py` and choose local option or build a docker container and use it like that.
+
+* **User-based:**  
+  For this mode there will be a need for building your own docker container with the use of a custom REST API for populating the vector store.
+  Populate the database like was demonstrated in REST API section and copy the username, you will need it for authentication with Streamlit.
+
+* **Session-based:**  
+  This mode also follows the same logic as user-based option.
+  You need to record your session id for authentication in Streamlit.
+
 ### Streamlit app
 You have a fully functional Streamlit frontend when ran in Docker or outside of it as explained earlier.
 To access Streamlit on your localhost, either look for a link in the terminal output when first running your Docker container or enter into your browser:
@@ -128,7 +129,6 @@ http://localhost:8000
 ```
 Unfortunately, even though it is an active issue that is being worked on, there is still no https support in streamlit.
 One might try running nginx as a reverse proxy to remedy that but it is a tiring endeavour, which I do not recommend.
-
 
 
   
