@@ -2,14 +2,13 @@ import requests
 from pathlib import Path
 
 url = "http://localhost:8001/upload"
-file_path = Path("/home/newuser/Downloads/contract_template.pdf")
+file_path = Path("files/contract.pdf")
 
 if not file_path.exists():
     print(f"Error: File {file_path} does not exist on the host.")
     exit(1)
 
 data = {
-    "user_id": "123",
     "session": "true"
 }
 
