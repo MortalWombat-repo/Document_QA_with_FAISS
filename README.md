@@ -1,16 +1,30 @@
 # Document_QA_with_FAISS
 
 # Table of Contents
-- [Overview](#overview)
-- [Stack](#stack-technologies-used-and-features-supported)
-- [Usage](#usage)
-  - [Cloning the project](#cloning-the-project)
-  - [Supplying your own API key](#supplying-your-own-api-key)
-  - [Docker container creation](#docker-container-creation)
-  - [REST API](#rest-api)
-  - [Different modes](#different-modes)
-  - [Streamlit App](#streamlit-app)
-- [Video Demonstration](#video-demonstration)
+1. [Overview](#overview)
+2. [Stack](#stack)
+   - [Features](#features)
+   - [Technologies](#technologies)
+3. [Usage](#usage)
+   - [System Requirements](#system-requirements)
+   - [Cloning the Project](#cloning-the-project)
+   - [Supplying Your Own API Key](#supplying-your-own-api-key)
+4. [Docker Container Creation](#docker-container-creation)
+5. [REST API](#rest-api)
+   - [Uploading Documents](#uploading-documents)
+   - [Querying the Database](#querying-the-database)
+6. [Different Modes](#different-modes)
+   - [Local Mode](#local-mode)
+   - [User-based Mode](#user-based-mode)
+   - [Session-based Mode](#session-based-mode)
+7. [Streamlit App](#streamlit-app)
+8. [Video Demonstration](#video-demonstration)
+   - [Building the Container](#building-the-container)
+   - [Populating the Vector Database](#populating-the-vector-database)
+   - [Querying via POST Request](#querying-via-post-request)
+   - [Streamlit Demo](#streamlit-demo)
+9. [Possible Improvements](#possible-improvements)
+
 
 ## Overview
 This is a **Retrieval Augmented Generation (RAG)** system for querying information from documents. The focus is on contractual information but it can be of any type generally. <br>
