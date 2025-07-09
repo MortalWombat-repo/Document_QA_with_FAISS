@@ -224,7 +224,7 @@ The video is too large to embed.
 
 * adding metadata when chunking and labeling each chunk
 * using said matadata to represent chunks as a whole document for easier keyword visualization and whole document operations such as summarizing and paraphrasing.
-* labeler of key terms and ranking of documents by importance
+* labeler of key terms and ranking of documents by importance (possibly with huggingface transformer library for sentiment analysis)
 
 
 
