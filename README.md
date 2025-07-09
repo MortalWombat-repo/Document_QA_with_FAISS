@@ -54,6 +54,7 @@ The system is served in a **Streamlit** frontend, and has 3 modes of use:
 - **Robust Error Handling**: Comprehensive error management and logging.
 - **Session Management**: Automatic cleanup of temporary session data.
 - **Professional Responses**: Formal, structured answers with context for contract-related queries.
+- **Modular design**: Functionalty is distributed around various modules and submodules as microservices to facilitate MLOps and deployment.
 
 ### Technologies
 
