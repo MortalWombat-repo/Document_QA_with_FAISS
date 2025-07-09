@@ -29,6 +29,33 @@ The system is served in a **Streamlit** frontend, and has 3 modes of use:
 
 ## Stack (Technologies used and features supported)
 
+### Features
+
+- **PDF Text Extraction**: Extracts text from PDFs using PyMuPDF.
+- **Semantic Search**: Queries contracts using natural language with FAISS-based vector search.
+- **Multilingual Support**: Handles English and Croatian queries with automatic language detection.
+- **Flexible Storage Modes**: Supports Global, User, and Session-based data storage.
+- **Web Interface**: Streamlit app for easy querying and data status visualization.
+- **API Services**: FastAPI endpoints for uploading PDFs and querying documents.
+- **Robust Error Handling**: Comprehensive error management and logging.
+- **Session Management**: Automatic cleanup of temporary session data.
+- **Professional Responses**: Formal, structured answers with context for contract-related queries.
+
+### Technologies
+
+- **Python**: Core programming language.
+- **Streamlit**: Web interface framework.
+- **FastAPI**: Asynchronous API framework.
+- **FAISS**: Vector storage and search.
+- **PyMuPDF**: PDF text extraction.
+- **LangChain**: Text chunking.
+- **Google Generative AI**: Text embedding and content generation.
+- **Lingua**: Language detection.
+- **NLTK**: Stopwords processing.
+- **Uvicorn**: ASGI server for FastAPI.
+- **JSON/FAISS**: Data storage formats.
+- **Bash**: Deployment script
+
 ## Usage
 Important!
 
