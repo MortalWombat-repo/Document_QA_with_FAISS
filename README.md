@@ -51,7 +51,7 @@ The system is served in a **Streamlit** frontend, and has 3 modes of use:
 - **LangChain**: Text chunking.
 - **Google Generative AI**: Text embedding and content generation.
 - **Lingua**: Language detection.
-- **NLTK**: Stopwords processing.
+- **NLTK**: Stopwords processing. -- In progress, first there is a need for automatic labeling of metadata when chunking
 - **Uvicorn**: ASGI server for FastAPI.
 - **JSON/FAISS**: Data storage formats.
 - **Bash**: Deployment script
