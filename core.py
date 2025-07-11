@@ -97,19 +97,40 @@ def hash_chunk(text: str) -> str:
     return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
 def build_or_update_faiss_index(chunks, gemini_embedding_function, batch_size=10, index_path="vector_store/index.faiss", hash_path="vector_store/file_hashes.json"):
-    """Build a new FAISS index in the specified path, ignoring existing indexes."""
-    logger.info(f"Building new FAISS index at {index_path}")
+    """Build or update a FAISS index, avoiding duplicate embeddings using SHA-256 chunk hashes."""
+    logger.info(f"Building/updating FAISS index at {index_path}")
     Path(index_path).parent.mkdir(parents=True, exist_ok=True)
     Path(hash_path).parent.mkdir(parents=True, exist_ok=True)
 
-    all_embeddings = []
+    # Load existing hashes if present
+    existing_hashes = set()
+    if os.path.exists(hash_path):
+        with open(hash_path, "r", encoding="utf-8") as f:
+            try:
+                existing_hashes = set(json.load(f))
+            except json.JSONDecodeError:
+                logger.warning("Hash file is empty or corrupted, starting fresh.")
+
+    new_chunks = []
     new_hashes = []
-    for i in tqdm(range(0, len(chunks), batch_size), desc="Embedding chunks"):
-        batch = chunks[i:i+batch_size]
+
+    # Filter out already embedded chunks
+    for chunk in chunks:
+        chunk_hash = hash_chunk(chunk)
+        if chunk_hash not in existing_hashes:
+            new_chunks.append(chunk)
+            new_hashes.append(chunk_hash)
+
+    if not new_chunks:
+        logger.info("No new chunks to embed. Skipping embedding and index creation.")
+        return load_faiss_index(index_path)
+
+    all_embeddings = []
+    for i in tqdm(range(0, len(new_chunks), batch_size), desc="Embedding chunks"):
+        batch = new_chunks[i:i+batch_size]
         try:
             embeddings = gemini_embedding_function(batch)
             all_embeddings.extend(embeddings)
-            new_hashes.extend([hash_chunk(chunk) for chunk in batch])
             time.sleep(0.5)
         except Exception as e:
             logger.error(f"Error embedding batch {i//batch_size + 1}: {str(e)}")
@@ -121,12 +142,22 @@ def build_or_update_faiss_index(chunks, gemini_embedding_function, batch_size=10
 
     embedding_matrix = np.array(all_embeddings).astype("float32")
     dimension = embedding_matrix.shape[1]
-    index = faiss.IndexFlatL2(dimension)
+
+    if os.path.exists(index_path):
+        index = faiss.read_index(index_path)
+        if index.d != dimension:
+            logger.error(f"Index dimension mismatch: {index.d} vs {dimension}")
+            raise ValueError("Index dimension mismatch")
+    else:
+        index = faiss.IndexFlatL2(dimension)
+
     index.add(embedding_matrix)
     faiss.write_index(index, index_path)
 
+    # Save updated hashes
+    all_hashes = list(existing_hashes.union(new_hashes))
     with open(hash_path, 'w', encoding='utf-8') as f:
-        json.dump(new_hashes, f, ensure_ascii=False, indent=2)
+        json.dump(all_hashes, f, ensure_ascii=False, indent=2)
 
     logger.info(f"Saved FAISS index with {index.ntotal} vectors to {index_path} and hashes to {hash_path}")
     return index
@@ -182,6 +213,7 @@ def query_document(user_query, embed_fn, chunks, faiss_index, client, user_langu
         prompt += f"\nPASSAGE: {passage_oneline}"
 
     try:
+        time.sleep(0.5)
         answer = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=prompt
@@ -199,6 +231,7 @@ def query_document_hr(user_query, embed_fn, chunks, faiss_index, client, user_la
 
     translate_to_lang = f"Translate {user_query} to English"
     try:
+        time.sleep(0.5)
         user_query_en = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=translate_to_lang
@@ -247,6 +280,7 @@ def query_document_hr(user_query, embed_fn, chunks, faiss_index, client, user_la
         prompt += f"\nODLOMCI: {passage_oneline}"
 
     try:
+        time.sleep(0.5)
         answer = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=prompt
