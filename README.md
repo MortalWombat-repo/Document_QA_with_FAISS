@@ -55,6 +55,7 @@ The system is served in a **Streamlit** frontend, and has 3 modes of use:
 - **Session Management**: Automatic cleanup of temporary session data.
 - **Professional Responses**: Formal, structured answers with context for contract-related queries.
 - **Modular design**: A distributed microservices design to facilitate MLOps and deployment.
+- **Deduplication of embeddings**: All embeddings are hashed and won't be recomputed if present.
 
 ### Technologies
 
