@@ -56,6 +56,7 @@ The system is served in a **Streamlit** frontend, and has 3 modes of use:
 - **Professional Responses**: Formal, structured answers with context for contract-related queries.
 - **Modular design**: A distributed microservices design to facilitate MLOps and deployment.
 - **Deduplication of embeddings**: All embeddings are hashed and won't be recomputed if present.
+- **Caching of embeddings**: All embeddings are cached to speed up and streamline retrieval and user experience.
 
 ### Technologies
 
@@ -71,6 +72,7 @@ The system is served in a **Streamlit** frontend, and has 3 modes of use:
 - **Uvicorn**: ASGI server for FastAPI.
 - **JSON/FAISS**: Data storage formats.
 - **Bash**: Deployment script
+- **Redis**: Caching of embeddings
 
 ## Usage
 Important!
