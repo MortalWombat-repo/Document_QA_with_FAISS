@@ -1,7 +1,15 @@
-import os
 import json
 from pathlib import Path
 import logging
+from core import (
+    extract_text_from_pdf,
+    chunking,
+    import_google_api,
+    embedding_function,
+    build_or_update_faiss_index,
+    save_chunks,
+    hash_chunk,
+)
 from core import (
     extract_text_from_pdf,
     chunking,
@@ -23,9 +31,12 @@ def create_vector_store(pdf_folder="files"):
     vector_store_path = Path("vector_store")
     index_path = vector_store_path / "index.faiss"
     hash_path = vector_store_path / "file_hashes.json"
+    index_path = vector_store_path / "index.faiss"
+    hash_path = vector_store_path / "file_hashes.json"
     vector_store_path.mkdir(exist_ok=True)
     logger.info(f"Ensured vector_store directory exists at {vector_store_path}")
 
+    # Initialize embedding function
     # Initialize embedding function
     try:
         client = import_google_api()
@@ -51,7 +62,20 @@ def create_vector_store(pdf_folder="files"):
             logger.warning("Hash file is empty or corrupted, starting fresh.")
 
     # Extract and filter new chunks
+    # Load existing hashes if available
+    existing_hashes = set()
+    if hash_path.exists():
+        try:
+            with open(hash_path, "r", encoding="utf-8") as f:
+                existing_hashes = set(json.load(f))
+        except json.JSONDecodeError:
+            logger.warning("Hash file is empty or corrupted, starting fresh.")
+
+    # Extract and filter new chunks
     all_chunks = []
+    new_chunks = []
+    new_hashes = []
+
     new_chunks = []
     new_hashes = []
 
@@ -72,6 +96,13 @@ def create_vector_store(pdf_folder="files"):
                     new_chunks.append(chunk)
                     new_hashes.append(h)
 
+
+            for chunk in chunks:
+                h = hash_chunk(chunk)
+                if h not in existing_hashes:
+                    new_chunks.append(chunk)
+                    new_hashes.append(h)
+
             logger.info(f"Extracted {len(chunks)} chunks from {pdf_file}")
         except Exception as e:
             logger.error(f"Error processing {pdf_file}: {str(e)}")
@@ -79,17 +110,24 @@ def create_vector_store(pdf_folder="files"):
 
     if not new_chunks:
         logger.info("No new chunks to embed. Vector store is already up to date.")
+    if not new_chunks:
+        logger.info("No new chunks to embed. Vector store is already up to date.")
         return
 
     try:
         index = build_or_update_faiss_index(
             chunks=new_chunks,
+            chunks=new_chunks,
             gemini_embedding_function=embed_fn,
+            index_path=str(index_path),
+            hash_path=str(hash_path)
             index_path=str(index_path),
             hash_path=str(hash_path)
         )
         logger.info(f"Updated FAISS index with {index.ntotal} vectors")
+        logger.info(f"Updated FAISS index with {index.ntotal} vectors")
 
+        # Save all chunks to JSON (includes all, not just new ones)
         # Save all chunks to JSON (includes all, not just new ones)
         save_chunks(all_chunks, filename="vector_store/chunks.json")
         logger.info("Vector store creation completed successfully")

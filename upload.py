@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 import logging
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
@@ -8,6 +7,7 @@ from uuid import uuid4
 import shutil
 import uvicorn
 
+from redis_utils import redis_cache
 from core import (
     extract_text_from_pdf,
     chunking,
@@ -40,14 +40,13 @@ async def upload_documents(
         raise HTTPException(status_code=400, detail="Either user_id or session=true must be provided")
 
     logger.info(f"Creating folder: {user_folder}")
-    # Clear existing folder to ensure fresh start
     if user_folder.exists():
         shutil.rmtree(user_folder)
     user_folder.mkdir(parents=True, exist_ok=True)
 
     valid_paths = []
 
-    # Save uploaded files into user_folder
+    # Save uploaded files
     if files:
         for file in files:
             if not file.filename.lower().endswith(".pdf"):
@@ -58,11 +57,11 @@ async def upload_documents(
                 shutil.copyfileobj(file.file, buffer)
             valid_paths.append(file_path)
 
-    # Use manual_paths directly, no copying
+    # Handle manual paths
     if manual_paths:
         paths = [Path(p.strip()) for p in manual_paths.split(",")]
         for path in paths:
-            if not path.exists() or not path.suffix.lower() == ".pdf":
+            if not path.exists() or path.suffix.lower() != ".pdf":
                 raise HTTPException(status_code=400, detail=f"Invalid file path: {path}")
         valid_paths.extend(paths)
 
@@ -70,7 +69,7 @@ async def upload_documents(
         raise HTTPException(status_code=400, detail="No valid PDF files provided.")
 
     try:
-        # Extract text from individual PDFs
+        # Extract and process
         extracted_text = ""
         for pdf_path in valid_paths:
             logger.info(f"Extracting text from file: {pdf_path}")
@@ -82,7 +81,7 @@ async def upload_documents(
 
         logger.info(f"Chunking text, length: {len(extracted_text)}")
         chunks = chunking(extracted_text)
-        logger.info(f"Created {len(chunks)} chunks: {str(chunks)[:100]}...")
+        logger.info(f"Created {len(chunks)} chunks.")
 
         client = import_google_api()
         gemini_embed_fn = embedding_function(client)
@@ -92,18 +91,12 @@ async def upload_documents(
         faiss_index_path = vector_store_path / "index.faiss"
         hash_path = vector_store_path / "file_hashes.json"
 
-        # Ensure vector_store directory is fresh
         if vector_store_path.exists():
             shutil.rmtree(vector_store_path)
         vector_store_path.mkdir(parents=True, exist_ok=True)
 
-        # Save chunks and build index after creating directory
         logger.info(f"Saving {len(chunks)} chunks to: {chunks_path}")
-        try:
-            save_chunks(chunks, filename=str(chunks_path))
-        except Exception as e:
-            logger.error(f"Failed to save chunks: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Failed to save chunks: {str(e)}")
+        save_chunks(chunks, filename=str(chunks_path))
 
         logger.info(f"Building FAISS index at: {faiss_index_path}")
         build_or_update_faiss_index(
@@ -114,6 +107,17 @@ async def upload_documents(
             hash_path=str(hash_path)
         )
 
+        # Invalidate related Redis cache
+        if session:
+            redis_cache.delete("app_session", "Session", None, session_id)
+            redis_cache.delete("user_session", None, session_id)
+        else:
+            redis_cache.delete("app_session", "User", user_id, None)
+            redis_cache.delete("user_session", user_id, None)
+
+        redis_cache.delete("chunks", str(chunks_path))
+        redis_cache.delete("faiss_index", str(faiss_index_path))
+
     except Exception as e:
         logger.error(f"Processing error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
@@ -123,7 +127,8 @@ async def upload_documents(
         "user_id": user_id,
         "session_id": session_id,
         "file_paths": [str(p) for p in valid_paths],
-        "session_mode": session
+        "session_mode": session,
+        "cache_invalidated": True
     })
 
 if __name__ == "__main__":

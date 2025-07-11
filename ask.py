@@ -15,6 +15,7 @@ from typing import Optional
 import logging
 import shutil
 import time
+from redis_utils import redis_cache
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -56,15 +57,15 @@ def get_user_session_path(user_id: Optional[str] = None, session_id: Optional[st
         return Path("/app/sessions") / session_id
     raise HTTPException(status_code=400, detail="Either user_id or session_id must be provided")
 
+# Modify the load_user_session_data function:
 def load_user_session_data(user_id: Optional[str] = None, session_id: Optional[str] = None):
-    """Load chunks and FAISS index"""
-    cache_key = f"{user_id or ''}_{session_id or ''}"
-    logger.info(f"Loading data for user_id: {user_id}, session_id: {session_id}")
-
-    if cache_key in user_session_cache:
-        logger.info(f"Using cached data for {cache_key}")
-        return user_session_cache[cache_key]
-
+    """Load chunks and FAISS index with Redis caching."""
+    cache_key = ["user_session", user_id or "", session_id or ""]
+    cached_data = redis_cache.get(cache_key)
+    if cached_data:
+        logger.info(f"Using cached data for user_id: {user_id}, session_id: {session_id}")
+        return cached_data
+    
     user_path = get_user_session_path(user_id, session_id)
 
     # Load chunks
@@ -84,14 +85,14 @@ def load_user_session_data(user_id: Optional[str] = None, session_id: Optional[s
             detail=f"No data found for {'user_id: ' + user_id if user_id else 'session_id: ' + session_id}"
         )
 
-    # Cache the loaded data
-    user_session_cache[cache_key] = {
+    # Cache the loaded data for 30 minutes
+    data_to_cache = {
         'chunks': chunks,
         'faiss_index': faiss_index
     }
-    logger.info(f"Cached data for {cache_key}")
-
-    return user_session_cache[cache_key]
+    redis_cache.set(cache_key, data_to_cache, ttl=1800)
+    
+    return data_to_cache
 
 # Lifespan event to initialize resources
 @asynccontextmanager
@@ -173,7 +174,7 @@ async def query_endpoint(request: QueryRequest):
                 top_k=request.top_k
             )
 
-        logger.info(f"Query response generated successfully")
+        logger.info("Query response generated successfully")
         return {"response": response}
     except Exception as e:
         logger.error(f"Error processing query: {str(e)}")

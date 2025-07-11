@@ -17,3 +17,5 @@ nltk
 pydantic
 requests
 python-multipart
+redis
+pyyaml

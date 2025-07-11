@@ -13,6 +13,7 @@ import hashlib
 import json
 from pathlib import Path
 import logging
+from redis_utils import redis_cache
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -96,25 +97,43 @@ def hash_chunk(text: str) -> str:
     """Generate SHA-256 hash for a chunk."""
     return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
-def build_or_update_faiss_index(chunks, gemini_embedding_function, batch_size=10, index_path="vector_store/index.faiss", hash_path="vector_store/file_hashes.json"):
-    """Build or update a FAISS index, avoiding duplicate embeddings using SHA-256 chunk hashes."""
+def build_or_update_faiss_index(chunks, gemini_embedding_function, batch_size=10, 
+                              index_path="vector_store/index.faiss", 
+                              hash_path="vector_store/file_hashes.json"):
+    """Build or update a FAISS index with Redis caching and duplicate prevention."""
     logger.info(f"Building/updating FAISS index at {index_path}")
+    
+    # Ensure directories exist
     Path(index_path).parent.mkdir(parents=True, exist_ok=True)
     Path(hash_path).parent.mkdir(parents=True, exist_ok=True)
 
-    # Load existing hashes if present
-    existing_hashes = set()
-    if os.path.exists(hash_path):
-        with open(hash_path, "r", encoding="utf-8") as f:
-            try:
-                existing_hashes = set(json.load(f))
-            except json.JSONDecodeError:
-                logger.warning("Hash file is empty or corrupted, starting fresh.")
+    # Redis cache keys
+    index_cache_key = ["faiss_index", index_path]
+    hash_cache_key = ["file_hashes", hash_path]
 
-    new_chunks = []
-    new_hashes = []
+    # Try to get index from cache first
+    cached_index = redis_cache.get(index_cache_key)
+    if cached_index is not None:
+        logger.info("Using cached FAISS index")
+        return cached_index
+
+    # Try to get hashes from cache, fall back to file
+    existing_hashes = redis_cache.get(hash_cache_key)
+    if existing_hashes is None and os.path.exists(hash_path):
+        try:
+            with open(hash_path, "r", encoding="utf-8") as f:
+                existing_hashes = set(json.load(f))
+            # Cache the hashes for future use
+            redis_cache.set(hash_cache_key, existing_hashes, ttl=86400)  # 24 hours
+        except json.JSONDecodeError:
+            logger.warning("Hash file is empty or corrupted, starting fresh.")
+            existing_hashes = set()
+    else:
+        existing_hashes = existing_hashes or set()
 
     # Filter out already embedded chunks
+    new_chunks = []
+    new_hashes = []
     for chunk in chunks:
         chunk_hash = hash_chunk(chunk)
         if chunk_hash not in existing_hashes:
@@ -122,16 +141,23 @@ def build_or_update_faiss_index(chunks, gemini_embedding_function, batch_size=10
             new_hashes.append(chunk_hash)
 
     if not new_chunks:
-        logger.info("No new chunks to embed. Skipping embedding and index creation.")
-        return load_faiss_index(index_path)
+        logger.info("No new chunks to embed. Returning existing index.")
+        existing_index = load_faiss_index(index_path)
+        if existing_index:
+            # Cache the existing index before returning
+            redis_cache.set(index_cache_key, existing_index, ttl=3600)
+        return existing_index
 
+    # Process new chunks in batches
     all_embeddings = []
+    for i in tqdm(range(0, len(new_chunks), batch_size), desc="Embedding chunks"):
+        batch = new_chunks[i:i+batch_size]
     for i in tqdm(range(0, len(new_chunks), batch_size), desc="Embedding chunks"):
         batch = new_chunks[i:i+batch_size]
         try:
             embeddings = gemini_embedding_function(batch)
             all_embeddings.extend(embeddings)
-            time.sleep(0.5)
+            time.sleep(0.5)  # Rate limiting
         except Exception as e:
             logger.error(f"Error embedding batch {i//batch_size + 1}: {str(e)}")
             raise
@@ -143,23 +169,41 @@ def build_or_update_faiss_index(chunks, gemini_embedding_function, batch_size=10
     embedding_matrix = np.array(all_embeddings).astype("float32")
     dimension = embedding_matrix.shape[1]
 
+    # Load or create index
     if os.path.exists(index_path):
-        index = faiss.read_index(index_path)
-        if index.d != dimension:
-            logger.error(f"Index dimension mismatch: {index.d} vs {dimension}")
-            raise ValueError("Index dimension mismatch")
+        try:
+            index = faiss.read_index(index_path)
+            if index.d != dimension:
+                logger.error(f"Index dimension mismatch: {index.d} vs {dimension}")
+                raise ValueError("Index dimension mismatch")
+        except Exception as e:
+            logger.error(f"Error loading existing index: {str(e)}")
+            index = faiss.IndexFlatL2(dimension)
     else:
         index = faiss.IndexFlatL2(dimension)
 
+    # Add new embeddings to index
     index.add(embedding_matrix)
-    faiss.write_index(index, index_path)
+    
+    # Persist to disk
+    try:
+        faiss.write_index(index, index_path)
+        
+        # Update and save hashes
+        updated_hashes = existing_hashes.union(new_hashes)
+        with open(hash_path, 'w', encoding='utf-8') as f:
+            json.dump(list(updated_hashes), f, ensure_ascii=False, indent=2)
+        
+        # Update cache
+        redis_cache.set(hash_cache_key, updated_hashes, ttl=86400)  # 24 hours
+        redis_cache.set(index_cache_key, index, ttl=3600)  # 1 hour
+        
+        logger.info(f"Updated FAISS index with {index.ntotal} vectors. "
+                   f"Added {len(new_chunks)} new chunks.")
+    except Exception as e:
+        logger.error(f"Error persisting index: {str(e)}")
+        raise
 
-    # Save updated hashes
-    all_hashes = list(existing_hashes.union(new_hashes))
-    with open(hash_path, 'w', encoding='utf-8') as f:
-        json.dump(all_hashes, f, ensure_ascii=False, indent=2)
-
-    logger.info(f"Saved FAISS index with {index.ntotal} vectors to {index_path} and hashes to {hash_path}")
     return index
 
 def get_language_name(language_code: str) -> str:
@@ -214,6 +258,7 @@ def query_document(user_query, embed_fn, chunks, faiss_index, client, user_langu
 
     try:
         time.sleep(0.5)
+        time.sleep(0.5)
         answer = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=prompt
@@ -231,6 +276,7 @@ def query_document_hr(user_query, embed_fn, chunks, faiss_index, client, user_la
 
     translate_to_lang = f"Translate {user_query} to English"
     try:
+        time.sleep(0.5)
         time.sleep(0.5)
         user_query_en = client.models.generate_content(
             model="gemini-2.0-flash",
@@ -281,6 +327,7 @@ def query_document_hr(user_query, embed_fn, chunks, faiss_index, client, user_la
 
     try:
         time.sleep(0.5)
+        time.sleep(0.5)
         answer = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=prompt
@@ -292,25 +339,38 @@ def query_document_hr(user_query, embed_fn, chunks, faiss_index, client, user_la
         raise
 
 def save_chunks(chunks, filename="vector_store/chunks.json"):
-    """Save chunks to a JSON file."""
+    """Save chunks to a JSON file and update Redis cache."""
     logger.info(f"Saving {len(chunks)} chunks to {filename}")
     try:
         Path(filename).parent.mkdir(parents=True, exist_ok=True)
         with open(filename, "w", encoding="utf-8") as f:
             json.dump(chunks, f, ensure_ascii=False, indent=2)
+        
+        # Update cache
+        cache_key = ["chunks", filename]
+        redis_cache.set(cache_key, chunks, ttl=3600)
+        
         logger.info(f"Successfully saved {len(chunks)} chunks to {filename}")
     except Exception as e:
         logger.error(f"Failed to save chunks to {filename}: {str(e)}")
         raise
 
 def load_chunks(filename="vector_store/chunks.json"):
-    """Load chunks from a JSON file."""
+    """Load chunks from a JSON file or Redis cache."""
+    cache_key = ["chunks", filename]
+    cached_chunks = redis_cache.get(cache_key)
+    if cached_chunks is not None:
+        logger.info(f"Loaded chunks from cache for {filename}")
+        return cached_chunks
+    
     logger.info(f"Loading chunks from {filename}")
     try:
         if os.path.exists(filename):
             with open(filename, "r", encoding="utf-8") as f:
                 chunks = json.load(f)
             logger.info(f"Loaded {len(chunks)} chunks from {filename}")
+            # Cache for 1 hour
+            redis_cache.set(cache_key, chunks, ttl=3600)
             return chunks
         logger.warning(f"Chunks file not found: {filename}")
         return None
@@ -319,12 +379,20 @@ def load_chunks(filename="vector_store/chunks.json"):
         return None
 
 def load_faiss_index(index_path="vector_store/index.faiss"):
-    """Load FAISS index from a file."""
+    """Load FAISS index from a file or Redis cache."""
+    cache_key = ["faiss_index", index_path]
+    cached_index = redis_cache.get(cache_key)
+    if cached_index is not None:
+        logger.info(f"Loaded FAISS index from cache for {index_path}")
+        return cached_index
+    
     logger.info(f"Loading FAISS index from {index_path}")
     try:
         if os.path.exists(index_path):
             index = faiss.read_index(index_path)
             logger.info(f"Loaded FAISS index with {index.ntotal} vectors from {index_path}")
+            # Cache for 1 hour
+            redis_cache.set(cache_key, index, ttl=3600)
             return index
         logger.warning(f"FAISS index file not found: {index_path}")
         return None

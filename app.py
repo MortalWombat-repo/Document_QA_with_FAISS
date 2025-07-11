@@ -1,16 +1,10 @@
-from dotenv import load_dotenv
 import streamlit as st
-import os
-import json
-import faiss
 from pathlib import Path
-import requests
 from core import (
     extract_text_from_pdf,
     chunking,
     import_google_api,
     embedding_function,
-    hash_chunk,
     build_or_update_faiss_index,
     get_language_name,
     query_document,
@@ -19,11 +13,14 @@ from core import (
     load_chunks,
     load_faiss_index
 )
+from redis_utils import redis_cache
+from lingua import Language, LanguageDetectorBuilder
+import nltk
+from nltk.corpus import stopwords
 
 # Streamlit Config
 st.set_page_config(page_title="Contract chatbot", layout="wide")
 
-from lingua import Language, LanguageDetectorBuilder
 @st.cache_resource
 def load_language_detector():
     detector = LanguageDetectorBuilder.from_languages(
@@ -36,9 +33,6 @@ def detect_language_lingua(text):
     detector = load_language_detector()
     lang = detector.detect_language_of(text)
     return lang.name if lang else "Unknown"
-
-import nltk
-from nltk.corpus import stopwords
 
 try:
     nltk.download('stopwords', quiet=True)
@@ -68,15 +62,29 @@ def get_data_path(mode, user_id=None, session_id=None):
         return Path("/app/sessions") / session_id
     raise ValueError("Invalid mode or missing user_id/session_id")
 
+# Modify the get_user_session_data function:
 def get_user_session_data(mode, user_id=None, session_id=None):
     data_path = get_data_path(mode, user_id, session_id)
     chunks_path = data_path / "chunks.json"
     faiss_path = data_path / "index.faiss"
     hash_path = data_path / "file_hashes.json"
 
+    # Try to get from cache first
+    cache_key = ["app_session", mode, user_id or "", session_id or ""]
+    cached_data = redis_cache.get(cache_key)
+    if cached_data:
+        return cached_data['chunks'], cached_data['faiss_index']
+
     if chunks_path.exists() and faiss_path.exists() and hash_path.exists():
         chunks = load_chunks(str(chunks_path))
         faiss_index = load_faiss_index(str(faiss_path))
+        
+        # Cache the data
+        redis_cache.set(cache_key, {
+            'chunks': chunks,
+            'faiss_index': faiss_index
+        }, ttl=1800)
+        
         return chunks, faiss_index
     return None, None
 
