@@ -114,6 +114,15 @@ docker run -it -p 8000:8000 -p 8001:8001 -p 8002:8002 my-app
 ```
    Do NOT omit the -p flag, and do not change the ports unless you also change them in the .py files that uvicorn serves.
 
+OR
+
+If you wish to run a Redis cached service to speed up queries, you will need a multi-container solution.
+
+1. For that you will need to run Docker compose with this command.
+```
+docker compose up --build
+```
+
 ### REST API
 The REST API is implemented with FastAPI and a production ready server uvicorn.
 
